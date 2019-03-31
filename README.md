@@ -12,7 +12,7 @@ face_detect.py reads from the camera and uses  Haar Cascades to detect faces and
 
 $ python face_detect.py
 
-Haar Cascades are machine learning based approach where a cascade function is trained from a lot of positive and negative images. It is then used to detect objects in other images. 
+Haar Cascades is a machine learning based approach where a cascade function is trained from a lot of positive and negative images. The function is then used to detect objects in other images. 
 
 See: https://docs.opencv.org/3.3.1/d7/d8b/tutorial_py_face_detection.html 
 
