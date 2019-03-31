@@ -27,6 +27,7 @@ $ sudo apt-get install v4l-utils
 
 For the Raspberry Pi V2 camera the output is (assuming the camera is /dev/video0):
 
+```
 $ v4l2-ctl --list-formats-ext
 ioctl: VIDIOC_ENUM_FMT
 	Index       : 0
@@ -43,7 +44,7 @@ ioctl: VIDIOC_ENUM_FMT
 			Interval: Discrete 0.017s (60.000 fps)
 		Size: Discrete 1280x720
 			Interval: Discrete 0.017s (60.000 fps)
-
+```
 
 <h2>Release Notes</h2>
 
