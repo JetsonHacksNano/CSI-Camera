@@ -10,21 +10,18 @@ import cv2
 
 # gstreamer_pipeline returns a GStreamer pipeline for capturing from the CSI camera
 # Defaults to 1280x720 @ 30fps 
-# Flip the image by setting the flip_method to 0
-# flip-method         : video flip methods
-#                        flags: readable, writable, controllable
-#                        Enum "GstNvVideoFlipMethod" Default: 0, "none"
-#                           (0): none             - Identity (no rotation)
-#                           (1): counterclockwise - Rotate counter-clockwise 90 degrees
-#                           (2): rotate-180       - Rotate 180 degrees
-#                           (3): clockwise        - Rotate clockwise 90 degrees
-#                           (4): horizontal-flip  - Flip horizontally
-#                           (5): upper-right-diagonal - Flip across upper right/lower left diagonal
-#                           (6): vertical-flip    - Flip vertically
-#                           (7): upper-left-diagonal - Flip across upper left/low
-def gstreamer_pipeline (width=1280, height=720, framerate=30, flip_method=2) :
-    return 'nvarguscamerasrc ! video/x-raw(memory:NVMM), format=(string)NV12, framerate=(fraction)%d/1 ! nvvidconv  flip-method=%d ! video/x-raw, width=(int)%d, height=(int)%d, format=(string)BGRx ! videoconvert ! appsink' % (framerate,flip_method,width,height)
+# Flip the image by setting the flip_method (most common values: 0 and 2)
+# display_width and display_height determine the size of the window on the screen
 
+def gstreamer_pipeline (capture_width=3280, capture_height=2464, display_width=820, display_height=616, framerate=21, flip_method=0) :   
+    return ('nvarguscamerasrc ! ' 
+    'video/x-raw(memory:NVMM), '
+    'width=(int)%d, height=(int)%d, '
+    'format=(string)NV12, framerate=(fraction)%d/1 ! '
+    'nvvidconv flip-method=%d ! '
+    'video/x-raw, width=(int)%d, height=(int)%d, format=(string)BGRx ! '
+    'videoconvert ! '
+    'video/x-raw, format=(string)BGR ! appsink'  % (capture_width,capture_height,framerate,flip_method,display_width,display_height))
 
 def face_detect() :
     face_cascade = cv2.CascadeClassifier('/usr/share/OpenCV/haarcascades/haarcascade_frontalface_default.xml')
