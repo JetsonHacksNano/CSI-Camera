@@ -4,7 +4,7 @@ The camera should be installed in the MIPI-CSI Camera Connector on the carrier b
 
 To test the camera:
 
-$ gst-launch-1.0 nvarguscamerasrc ! 'video/x-raw(memory:NVMM),width=1024, height=768, framerate=120/1, format=NV12' ! nvvidconv flip-method=0 ! nvegltransform ! nveglglessink -e
+$ gst-launch-1.0 nvarguscamerasrc ! 'video/x-raw(memory:NVMM),width=1024, height=768, framerate=21/1, format=NV12' ! nvvidconv flip-method=0 ! nvegltransform ! nveglglessink -e
 
 There are three examples:
 
