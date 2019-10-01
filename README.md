@@ -23,7 +23,7 @@ Haar Cascades is a machine learning based approach where a cascade function is t
 
 See: https://docs.opencv.org/3.3.1/d7/d8b/tutorial_py_face_detection.html 
 
-The third example is a simple C++ prgoram which reads from the camera and displays to a window on the screen using OpenCV:
+The third example is a simple C++ program which reads from the camera and displays to a window on the screen using OpenCV:
 
 ```
 $ g++ -std=c++11 -Wall -I/usr/lib/opencv simple_camera.cpp -L/usr/lib -lopencv_core -lopencv_highgui -lopencv_videoio -o simple_camera
@@ -80,7 +80,11 @@ flip-method         : video flip methods
 
 <h2>Release Notes</h2>
 
-Initial Release March, 2019
+V2 Release September, 2019
+* L4T 32.2.1 (JetPack 4.2.2)
+* Tested on Jetson Nano
+
+Initial Release (V1) March, 2019
 * L4T 32.1.0 (JetPack 4.2)
 * Tested on Jetson Nano
 
