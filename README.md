@@ -80,11 +80,11 @@ flip-method         : video flip methods
 
 <h2>Release Notes</h2>
 
-V2 Release September, 2019
+v2.0 Release September, 2019
 * L4T 32.2.1 (JetPack 4.2.2)
 * Tested on Jetson Nano
 
-Initial Release (V1) March, 2019
+Initial Release (v1.0) March, 2019
 * L4T 32.1.0 (JetPack 4.2)
 * Tested on Jetson Nano
 
