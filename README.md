@@ -82,6 +82,7 @@ flip-method         : video flip methods
 
 v2.0 Release September, 2019
 * L4T 32.2.1 (JetPack 4.2.2)
+* OpenCV 3.3.1
 * Tested on Jetson Nano
 
 Initial Release (v1.0) March, 2019
