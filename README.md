@@ -78,6 +78,18 @@ flip-method         : video flip methods
                            (7): upper-left-diagonal - Flip across upper left/low
 ```
 
+<h2>OpenCV and Python</h2>
+Starting with L4T 32.2.1 / JetPack 4.2.2, GStreamer support is built in to OpenCV.
+The OpenCV version is 3.3.1 for those versions. Please note that if you are using
+earlier versions of OpenCV (most likely installed from the Ubuntu repository), you
+will get 'Unable to open camera' errors.
+<br>
+If you can open the camera in GStreamer from the command line, and have issues opening the camera in Python, check the OpenCV version. 
+
+```
+>>>cv2.__version__
+```
+
 <h2>Release Notes</h2>
 
 v2.0 Release September, 2019
