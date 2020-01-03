@@ -34,6 +34,15 @@ $ ./simple_camera
 
 <h2>Notes</h2>
 
+<h3>OpenCV 4 and JetPack 4.3</h3>
+Starting with JetPack 4.3/L4T 32.3.1 the Jetson runs OpenCV 4. This means that if you are using an earlier version of JetPack, you will need to select an earlier release of this CSI-Camera repository. In order to do that for example, before running the samples:
+
+```
+$ git clone https://github.com/JetsonHacksNano/CSI-Camera.git
+
+$ git checkout v2.0
+```
+
 <h3>Camera Image Formats</h3>
 You can use v4l2-ctl to determine the camera capabilities. v4l2-ctl is in the v4l-utils:
 
