@@ -2,6 +2,12 @@
 Simple example of using a MIPI-CSI(2) Camera (like the Raspberry Pi Version 2 camera) with the NVIDIA Jetson Nano Developer Kit.
 The camera should be installed in the MIPI-CSI Camera Connector on the carrier board. The pins on the camera ribbon should face the Jetson Nano module.
 
+The new Jetson Nano B01 devloper kit has two CSI camera slots. You can use the sensor_mode attribute with nvarguscamerasrc to specify the camera. Valid vales are 0 or 1, i.e.
+
+```
+nvarguscamerasrc sensor_mode=1 !
+```
+
 To test the camera:
 
 ```
@@ -9,7 +15,7 @@ $ gst-launch-1.0 nvarguscamerasrc ! 'video/x-raw(memory:NVMM),width=3820, height
 
 ```
 
-There are three examples:
+There are several examples:
 
 simple_camera.py is a Python script which reads from the camera and displays to a window on the screen using OpenCV:
 
@@ -30,6 +36,10 @@ $ g++ -std=c++11 -Wall -I/usr/lib/opencv simple_camera.cpp -L/usr/lib -lopencv_c
 
 $ ./simple_camera
 ```
+
+The final example is dual_camera.py. This is a simple Python program which reads both cameras and displays them side by side in a window. The window is 1920x540. For speed, the script uses a separate thread to read each camera image stream.
+
+$ python3 dual_camera.py
 
 
 <h2>Notes</h2>
