@@ -8,7 +8,7 @@
 
 # This script will open a window and place the camera stream from each camera in a window
 # arranged horizontally.
-# The camera streams are each read in their own thread, as if done sequentially there
+# The camera streams are each read in their own thread, as when done sequentially there
 # is a noticeable lag
 # For better performance, the next step would be to experiment with having the window display
 # in a separate thread
@@ -26,40 +26,68 @@ right_camera = None
 
 
 class CSI_Camera:
-    # OpenCV video capture element
-    video_capture = None
-    # The last captured image from the camera
-    image = None
-    # The thread where the video capture runs
-    read_thread = None
+
+    def __init__ (self) :
+        # Initialize instance variables
+        # OpenCV video capture element
+        self.video_capture = None
+        # The last captured image from the camera
+        self.frame = None
+        self.grabbed = False
+        # The thread where the video capture runs
+        self.read_thread = None
+        self.read_lock = threading.Lock()
+        self.running = False
+
 
     def open(self, gstreamer_pipeline_string):
         try:
             self.video_capture = cv2.VideoCapture(
                 gstreamer_pipeline_string, cv2.CAP_GSTREAMER
             )
+            
         except RuntimeError:
             self.video_capture = None
             print("Unable to open camera")
             print("Pipeline: " + gstreamer_pipeline_string)
             return
+        # Grab the first frame to start the video capturing
+        self.grabbed, self.frame = self.video_capture.read()
 
     def start(self):
+        if self.running:
+            print('Video capturing is already running')
+            return None
         # create a thread to read the camera image
         if self.video_capture != None:
-            self.read_thread = threading.Thread(target=self.read_image)
+            self.running=True
+            self.read_thread = threading.Thread(target=self.updateCamera)
             self.read_thread.start()
         return self
 
-    def read_image(self):
+    def stop(self):
+        self.running=False
+        self.read_thread.join()
+
+    def updateCamera(self):
         # This is the thread to read images from the camera
-        while self.video_capture.isOpened():
+        while self.running:
             try:
-                retval, self.image = self.video_capture.read()
+                grabbed, frame = self.video_capture.read()
+                with self.read_lock:
+                    self.grabbed=grabbed
+                    self.frame=frame
             except RuntimeError:
                 print("Could not read image from camera")
         # FIX ME - stop and cleanup thread
-        self.read_thread = None
+        # Something bad happened
+        
+
+    def read(self):
+        with self.read_lock:
+            frame = self.frame.copy()
+            grabbed=self.grabbed
+        return grabbed, frame
 
     def release(self):
         if self.video_capture != None:
@@ -115,6 +143,8 @@ def start_cameras():
             display_width=960,
         )
     )
+    left_camera.start()
+
     right_camera = CSI_Camera()
     right_camera.open(
         gstreamer_pipeline(
@@ -125,14 +155,7 @@ def start_cameras():
             display_width=960,
         )
     )
-
-    if left_camera.video_capture.isOpened():
-        left_camera.start()
-        cv2.namedWindow("Left Camera", cv2.WINDOW_AUTOSIZE)
-
-    if right_camera.video_capture.isOpened():
-        right_camera.start()
-        cv2.namedWindow("Right Camera", cv2.WINDOW_AUTOSIZE)
+    right_camera.start()
 
     cv2.namedWindow("CSI Cameras", cv2.WINDOW_AUTOSIZE)
 
@@ -143,22 +166,15 @@ def start_cameras():
         # Cameras did not open, or no camera attached
 
         print("Unable to open any cameras")
-        # TODO: Cleanup
+        # TODO: Proper Cleanup
         SystemExit(0)
 
-    while (
-        cv2.getWindowProperty("Left Camera", 0) >= 0
-        or cv2.getWindowProperty("Right Camera", 0) >= 0
-    ):
-        # if cv2.getWindowProperty("Left Camera", 0) >= 0 and left_camera.image is not None :
-        # cv2.imshow("Left Camera", left_camera.image)
-
-        # if cv2.getWindowProperty("Right Camera", 0) >= 0 and right_camera.image is not None :
-        # cv2.imshow("Right Camera", right_camera.image)
-
-        frame = np.hstack((left_camera.image, right_camera.image))
-        frame_concat = np.concatenate((left_camera.image, right_camera.image), axis=1)
-        cv2.imshow("CSI Cameras", frame_concat)
+    while cv2.getWindowProperty("CSI Cameras", 0) >= 0 :
+        
+        _ , left_image=left_camera.read()
+        _ , right_image=right_camera.read()
+        camera_images = np.vstack((left_image, right_image))
+        cv2.imshow("CSI Cameras", camera_images)
 
         # This also acts as
         keyCode = cv2.waitKey(30) & 0xFF
@@ -166,7 +182,9 @@ def start_cameras():
         if keyCode == 27:
             break
 
+    left_camera.stop()
     left_camera.release()
+    right_camera.stop()
     right_camera.release()
     cv2.destroyAllWindows()
 
