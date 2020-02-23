@@ -37,9 +37,11 @@ $ g++ -std=c++11 -Wall -I/usr/lib/opencv simple_camera.cpp -L/usr/lib -lopencv_c
 $ ./simple_camera
 ```
 
-The final example is dual_camera.py. This is a simple Python program which reads both cameras and displays them side by side in a window. The window is 1920x540. For speed, the script uses a separate thread to read each camera image stream.
+The final example is dual_camera.py. This example is for the newer rev B01 of the Jetson Nano board, identifiable by two CSI-MIPI camera ports. This is a simple Python program which reads both CSI cameras and displays them in a window. The window is 960x1080. For performance, the script uses a separate thread for reading each camera image stream. To run the script:
 
+```
 $ python3 dual_camera.py
+```
 
 
 <h2>Notes</h2>
