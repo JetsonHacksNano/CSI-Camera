@@ -1,11 +1,12 @@
 # CSI-Camera
-Simple example of using a MIPI-CSI(2) Camera (like the Raspberry Pi Version 2 camera) with the NVIDIA Jetson Nano Developer Kit.
-The camera should be installed in the MIPI-CSI Camera Connector on the carrier board. The pins on the camera ribbon should face the Jetson Nano module.
+Simple example of using a MIPI-CSI(2) Camera (like the Raspberry Pi Version 2 camera) with the NVIDIA Jetson Nano Developer Kit. This is support code for the article on JetsonHacks: https://wp.me/p7ZgI9-19v
 
-The new Jetson Nano B01 devloper kit has two CSI camera slots. You can use the sensor_mode attribute with nvarguscamerasrc to specify the camera. Valid vales are 0 or 1, i.e.
+The camera should be installed in the MIPI-CSI Camera Connector on the carrier board. The pins on the camera ribbon should face the Jetson Nano module, the stripe faces outward.
+
+The new Jetson Nano B01 developer kit has two CSI camera slots. You can use the sensor_mode attribute with nvarguscamerasrc to specify the camera. Valid values are 0 or 1 (the default is 0 if not specified), i.e.
 
 ```
-nvarguscamerasrc sensor_mode=1 !
+nvarguscamerasrc sensor_mode=0
 ```
 
 To test the camera:
