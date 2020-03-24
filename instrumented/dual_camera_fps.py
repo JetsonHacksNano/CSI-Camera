@@ -24,6 +24,12 @@ import numpy as np
 left_camera = None
 right_camera = None
 
+# Let's use a repeating Timer for counting FPS
+class RepeatTimer(threading.Timer):
+    def run(self):
+        while not self.finished.wait(self.interval):
+            self.function(*self.args, **self.kwargs)
+
 
 class CSI_Camera:
 
@@ -38,6 +44,11 @@ class CSI_Camera:
         self.read_thread = None
         self.read_lock = threading.Lock()
         self.running = False
+        self.fps_timer=None
+        self.frames_read=0
+        self.frames_displayed=0
+        self.last_frames_read=0
+        self.last_frames_displayed=0
 
 
     def open(self, gstreamer_pipeline_string):
@@ -77,6 +88,7 @@ class CSI_Camera:
                 with self.read_lock:
                     self.grabbed=grabbed
                     self.frame=frame
+                    self.frames_read=self.frames_read+1
             except RuntimeError:
                 print("Could not read image from camera")
         # FIX ME - stop and cleanup thread
@@ -93,10 +105,24 @@ class CSI_Camera:
         if self.video_capture != None:
             self.video_capture.release()
             self.video_capture = None
+        # Kill the timer
+        self.fps_timer.cancel()
+        self.fps_timer.join()
         # Now kill the thread
         if self.read_thread != None:
             self.read_thread.join()
 
+    def update_fps_stats(self):
+        self.last_frames_read=self.frames_read
+        self.last_frames_displayed=self.frames_displayed
+        # Start the next measurement cycle
+        self.frames_read=0
+        self.frames_displayed=0
+
+    def start_counting_fps(self):
+        self.fps_timer=RepeatTimer(1.0,self.update_fps_stats)
+        self.fps_timer.start()
+    
 
 # Currently there are setting frame rate on CSI Camera on Nano through gstreamer
 # Here we directly select sensor_mode 3 (1280x720, 59.9999 fps)
@@ -107,7 +133,7 @@ def gstreamer_pipeline(
     capture_height=720,
     display_width=1280,
     display_height=720,
-    framerate=30,
+    framerate=60,
     flip_method=0,
 ):
     return (
@@ -130,6 +156,24 @@ def gstreamer_pipeline(
             display_height,
         )
     )
+
+# Simple draw label on an image; in our case, the video frame
+def draw_label(cv_image, label_text, label_position):
+    font_face = cv2.FONT_HERSHEY_SIMPLEX
+    scale = 0.5
+    color = (255,255,255)
+    thickness = cv2.FILLED
+    # You can get the size of the string with cv2.getTextSize here
+    cv2.putText(cv_image, label_text, label_position, font_face, scale, color, 1, cv2.LINE_AA)
+
+# Read a frame from the camera, and draw the FPS on the image if desired
+# Return an image
+def read_camera(camera,display_fps):
+    _ , camera_image=camera.read()
+    if display_fps:
+        draw_label(camera_image, "Frames Displayed (PS): "+str(camera.last_frames_displayed),(10,20))
+        draw_label(camera_image, "Frames Read (PS): "+str(camera.last_frames_read),(10,40))
+    return camera_image
 
 
 def start_cameras():
@@ -168,24 +212,29 @@ def start_cameras():
         print("Unable to open any cameras")
         # TODO: Proper Cleanup
         SystemExit(0)
+    try:
+        # Start counting the number of frames read and displayed
+        left_camera.start_counting_fps()
+        right_camera.start_counting_fps()
+        while cv2.getWindowProperty("CSI Cameras", 0) >= 0 :
+            left_image=read_camera(left_camera,True)
+            right_image=read_camera(right_camera,True)
+            # We place both images side by side to show in the window
+            camera_images = np.hstack((left_image, right_image))
+            cv2.imshow("CSI Cameras", camera_images)
+            left_camera.frames_displayed=left_camera.frames_displayed+1
+            right_camera.frames_displayed=right_camera.frames_displayed+1
+            # This also acts as a frame limiter
+            keyCode = cv2.waitKey(25) & 0xFF
+            # Stop the program on the ESC key
+            if keyCode == 27:
+                break   
 
-    while cv2.getWindowProperty("CSI Cameras", 0) >= 0 :
-        
-        _ , left_image=left_camera.read()
-        _ , right_image=right_camera.read()
-        camera_images = np.hstack((left_image, right_image))
-        cv2.imshow("CSI Cameras", camera_images)
-
-        # This also acts as
-        keyCode = cv2.waitKey(30) & 0xFF
-        # Stop the program on the ESC key
-        if keyCode == 27:
-            break
-
-    left_camera.stop()
-    left_camera.release()
-    right_camera.stop()
-    right_camera.release()
+    finally:
+        left_camera.stop()
+        left_camera.release()
+        right_camera.stop()
+        right_camera.release()
     cv2.destroyAllWindows()
 
 
