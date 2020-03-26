@@ -51,11 +51,11 @@ def show_camera():
     # To flip the image, modify the flip_method parameter (0 and 2 are the most common)
     print(gstreamer_pipeline(flip_method=0))
     left_cap = cv2.VideoCapture(
-        gstreamer_pipeline(flip_method=0,display_width=640,display_height=360,framerate=30), cv2.CAP_GSTREAMER)
+        gstreamer_pipeline(flip_method=0,display_width=960,display_height=540,framerate=30), cv2.CAP_GSTREAMER)
     right_cap = cv2.VideoCapture(gstreamer_pipeline(
-        flip_method=0, sensor_id=1,display_width=640,display_height=360,framerate=30), cv2.CAP_GSTREAMER)
+        flip_method=0, sensor_id=1,display_width=960,display_height=540,framerate=30), cv2.CAP_GSTREAMER)
     if left_cap.isOpened():
-        window_handle = cv2.namedWindow("CSI Camera", cv2.WINDOW_AUTOSIZE)
+        cv2.namedWindow("CSI Camera", cv2.WINDOW_AUTOSIZE)
         # Window
         while cv2.getWindowProperty("CSI Camera", 0) >= 0:
             with Timer() as context_time:
@@ -69,7 +69,7 @@ def show_camera():
                 # print(context_time.elapsed)
 
                 # This also acts as
-                keyCode = cv2.waitKey(5) & 0xFF
+                keyCode = cv2.waitKey(20) & 0xFF
             # print(context_time.elapsed)
             # print("---")
             # Stop the program on the ESC key

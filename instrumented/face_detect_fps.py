@@ -103,7 +103,7 @@ def face_detect():
                     
                 print("Elapsed time: "+str(measure.elapsed))
                 frames_displayed = frames_displayed+1
-                keyCode = cv2.waitKey(5) & 0xFF
+                keyCode = cv2.waitKey(10) & 0xFF
                 # Stop the program on the ESC key
                 if keyCode == 27:
                     break

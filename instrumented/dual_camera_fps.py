@@ -22,7 +22,6 @@ def draw_label(cv_image, label_text, label_position):
     font_face = cv2.FONT_HERSHEY_SIMPLEX
     scale = 0.5
     color = (255,255,255)
-    thickness = cv2.FILLED
     # You can get the size of the string with cv2.getTextSize here
     cv2.putText(cv_image, label_text, label_position, font_face, scale, color, 1, cv2.LINE_AA)
 
@@ -36,11 +35,11 @@ def read_camera(csi_camera,display_fps):
     return camera_image
 
 # Good for 1280x720
-DISPLAY_WIDTH=640
-DISPLAY_HEIGHT=360
+# DISPLAY_WIDTH=640
+# DISPLAY_HEIGHT=360
 # For 1920x1080
-# DISPLAY_WIDTH=960
-# DISPLAY_HEIGHT=540
+DISPLAY_WIDTH=960
+DISPLAY_HEIGHT=540
 
 # 1920x1080, 30 fps
 SENSOR_MODE_1080=2
@@ -97,7 +96,7 @@ def start_cameras():
             right_camera.frames_displayed += 1
             # This also acts as a frame limiter
             # Stop the program on the ESC key
-            if (cv2.waitKey(5) & 0xFF) == 27:
+            if (cv2.waitKey(20) & 0xFF) == 27:
                 break   
 
     finally:

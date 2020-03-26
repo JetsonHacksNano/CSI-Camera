@@ -17,7 +17,6 @@ def draw_label(cv_image, label_text, label_position):
     font_face = cv2.FONT_HERSHEY_SIMPLEX
     scale = 0.5
     color = (255,255,255)
-    thickness = cv2.FILLED
     # You can get the size of the string with cv2.getTextSize here
     cv2.putText(cv_image, label_text, label_position, font_face, scale, color, 1, cv2.LINE_AA)
 
