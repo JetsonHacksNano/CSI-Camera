@@ -1,15 +1,10 @@
 # MIT License
-# Copyright (c) 2019,2020 JetsonHacks
-# See license
-# A very simple code snippet
-# Using two  CSI cameras (such as the Raspberry Pi Version 2) connected to a
-# NVIDIA Jetson Nano Developer Kit (Rev B01) using OpenCV
-# Drivers for the camera and OpenCV are included in the base image in JetPack 4.3+
+# Copyright (c) 2019 JetsonHacks
+# See LICENSE for OpenCV license and additional information
 
-# This script will open a window and place the camera stream from each camera in a window
-# arranged horizontally.
-# The camera streams are each read in their own thread, as when done sequentially there
-# is a noticeable lag
+# https://docs.opencv.org/3.3.1/d7/d8b/tutorial_py_face_detection.html
+# On the Jetson Nano, OpenCV comes preinstalled
+# Data files are in /usr/sharc/OpenCV
 
 import cv2
 import numpy as np
@@ -47,7 +42,13 @@ SENSOR_MODE_1080=2
 # 1280x720, 60 fps
 SENSOR_MODE_720=3
 
-def start_cameras():
+def face_detect():
+    face_cascade = cv2.CascadeClassifier(
+        "/usr/share/opencv4/haarcascades/haarcascade_frontalface_default.xml"
+    )
+    eye_cascade = cv2.CascadeClassifier(
+        "/usr/share/opencv4/haarcascades/haarcascade_eye.xml"
+    )
     left_camera = CSI_Camera()
     left_camera.create_gstreamer_pipeline(
             sensor_id=0,
@@ -59,25 +60,11 @@ def start_cameras():
     )
     left_camera.open(left_camera.gstreamer_pipeline)
     left_camera.start()
-
-    right_camera = CSI_Camera()
-    right_camera.create_gstreamer_pipeline(
-            sensor_id=1,
-            sensor_mode=SENSOR_MODE_720,
-            framerate=30,
-            flip_method=0,
-            display_height=DISPLAY_HEIGHT,
-            display_width=DISPLAY_WIDTH,
-    )
-    right_camera.open(right_camera.gstreamer_pipeline)
-    right_camera.start()
-
-    cv2.namedWindow("CSI Cameras", cv2.WINDOW_AUTOSIZE)
+    cv2.namedWindow("Face Detect", cv2.WINDOW_AUTOSIZE)
 
     if (
         not left_camera.video_capture.isOpened()
-        or not right_camera.video_capture.isOpened()
-    ):
+     ):
         # Cameras did not open, or no camera attached
 
         print("Unable to open any cameras")
@@ -86,27 +73,34 @@ def start_cameras():
     try:
         # Start counting the number of frames read and displayed
         left_camera.start_counting_fps()
-        right_camera.start_counting_fps()
-        while cv2.getWindowProperty("CSI Cameras", 0) >= 0 :
-            left_image=read_camera(left_camera,show_fps)
-            right_image=read_camera(right_camera,show_fps)
-            # We place both images side by side to show in the window
-            camera_images = np.hstack((left_image, right_image))
-            cv2.imshow("CSI Cameras", camera_images)
-            left_camera.frames_displayed += 1
-            right_camera.frames_displayed += 1
-            # This also acts as a frame limiter
-            # Stop the program on the ESC key
-            if (cv2.waitKey(5) & 0xFF) == 27:
-                break   
+        while cv2.getWindowProperty("Face Detect", 0) >= 0 :
+            img=read_camera(left_camera,False)
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
+            for (x, y, w, h) in faces:
+                cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
+                roi_gray = gray[y : y + h, x : x + w]
+                roi_color = img[y : y + h, x : x + w]
+                eyes = eye_cascade.detectMultiScale(roi_gray)
+                for (ex, ey, ew, eh) in eyes:
+                    cv2.rectangle(
+                        roi_color, (ex, ey), (ex + ew, ey + eh), (0, 255, 0), 2
+                    )
+            if show_fps:
+                draw_label(img, "Frames Displayed (PS): "+str(left_camera.last_frames_displayed),(10,20))
+                draw_label(img, "Frames Read (PS): "+str(left_camera.last_frames_read),(10,40))
+            cv2.imshow("Face Detect", img)
+            left_camera.frames_displayed += 1
+            keyCode = cv2.waitKey(5) & 0xFF
+            # Stop the program on the ESC key
+            if keyCode == 27:
+                break
     finally:
         left_camera.stop()
         left_camera.release()
-        right_camera.stop()
-        right_camera.release()
-    cv2.destroyAllWindows()
+        cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
-    start_cameras()
+    face_detect()

@@ -6,7 +6,7 @@ The camera should be installed in the MIPI-CSI Camera Connector on the carrier b
 The new Jetson Nano B01 developer kit has two CSI camera slots. You can use the sensor_mode attribute with nvarguscamerasrc to specify the camera. Valid values are 0 or 1 (the default is 0 if not specified), i.e.
 
 ```
-nvarguscamerasrc sensor_mode=0
+nvarguscamerasrc sensor_id=0
 ```
 
 To test the camera:
@@ -14,7 +14,8 @@ To test the camera:
 ```
 # Simple Test
 #  Ctrl^C to exit
-$ gst-launch-1.0 nvarguscamerasrc ! nvoverlaysink
+# sensor_id selects the camera: 0 or 1 on Jetson Nano B01
+$ gst-launch-1.0 nvarguscamerasrc sensor_id=0 ! nvoverlaysink
 
 # More specific - width, height and framerate are from supported video modes
 # Example also shows sensor_mode paramter to nvarguscamerasrc
@@ -50,6 +51,7 @@ The final example is dual_camera.py. This example is for the newer rev B01 of th
 $ python3 dual_camera.py
 ```
 
+The directory 'instrumented' contains instrumented code which can help adjust performance and frame rates.
 
 <h2>Notes</h2>
 
@@ -58,7 +60,7 @@ You can use v4l2-ctl to determine the camera capabilities. v4l2-ctl is in the v4
 
 $ sudo apt-get install v4l-utils
 
-For the Raspberry Pi V2 camera the output is (assuming the camera is /dev/video0):
+For the Raspberry Pi V2 camera, typically the output is (assuming the camera is /dev/video0):
 
 ```
 $ v4l2-ctl --list-formats-ext
