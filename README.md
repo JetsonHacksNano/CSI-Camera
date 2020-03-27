@@ -128,10 +128,16 @@ If you can open the camera in GStreamer from the command line, and have issues o
 
 <h2>Release Notes</h2>
 
-v2.1 Release March, 2020
+v3.1 Release March, 2020
 * L4T 32.3.1 (JetPack 4.3)
 * OpenCV 4.1.1
 * Tested on Jetson Nano B01
+* Tested with Raspberry Pi v2 cameras
+
+v3.0 December 2019
+* L4T 32.3.1
+* OpenCV 4.1.1.
+* Tested with Raspberry Pi v2 camera
 
 v2.0 Release September, 2019
 * L4T 32.2.1 (JetPack 4.2.2)
