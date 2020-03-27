@@ -18,8 +18,23 @@ To test the camera:
 $ gst-launch-1.0 nvarguscamerasrc sensor_id=0 ! nvoverlaysink
 
 # More specific - width, height and framerate are from supported video modes
-# Example also shows sensor_mode paramter to nvarguscamerasrc
-$ gst-launch-1.0 nvarguscamerasrc sensor_mode=0 ! 'video/x-raw(memory:NVMM),width=3280, height=2464, framerate=21/1, format=NV12' ! nvvidconv flip-method=0 ! 'video/x-raw,width=960, height=720' ! nvvidconv ! nvegltransform ! nveglglessink -e
+# Example also shows sensor_mode parameter to nvarguscamerasrc
+# See table below for example video modes of example sensor; Displays 1/4 size of video frame
+$ gst-launch-1.0 nvarguscamerasrc sensor_id=0 ! \
+   'video/x-raw(memory:NVMM),width=3280, height=2464, framerate=21/1, format=NV12' ! \
+   nvvidconv flip-method=0 ! 'video/x-raw,width=960, height=720' ! \
+   nvvidconv ! nvegltransform ! nveglglessink -e
+
+<em><b>Note: </b>The cameras appear to report differently than show below on some Jetsons. For example:
+GST_ARGUS: Available Sensor modes :
+GST_ARGUS: 3264 x 2464 FR = 21.000000 fps Duration = 47619048 ; Analog Gain range min 1.000000, max 10.625000; Exposure Range min 13000, max 683709000;
+
+You should adjust accordingly, ie for 3264x2464 @ 21 fps on sensor_id 1 of a Jetson Nano B01:
+$ gst-launch-1.0 nvarguscamerasrc sensor_id=1 ! \
+   'video/x-raw(memory:NVMM),width=3264, height=2464, framerate=21/1, format=NV12' ! \
+   nvvidconv flip-method=0 ! 'video/x-raw,width=816, height=616' ! \
+   nvvidconv ! nvegltransform ! nveglglessink -e</em>
+
 
 ```
 
