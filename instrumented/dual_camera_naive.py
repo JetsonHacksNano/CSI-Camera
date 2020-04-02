@@ -76,6 +76,7 @@ def show_camera():
             if keyCode == 27:
                 break
         left_cap.release()
+        right_cap.release()
         cv2.destroyAllWindows()
     else:
         print("Unable to open camera")
