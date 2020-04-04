@@ -40,6 +40,8 @@ Also, it's been noticed that the display transform is sensitive to width and hei
 
 There are several examples:
 
+Note: You may need to install numpy for the Python examples to work, ie $ pip3 install numpy
+
 simple_camera.py is a Python script which reads from the camera and displays to a window on the screen using OpenCV:
 
 $ python simple_camera.py
