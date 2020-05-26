@@ -14,6 +14,9 @@ To test the camera:
 ```
 # Simple Test
 #  Ctrl^C to exit
+# Jetson Nano A01
+$ gst-launch-1.0 nvarguscamerasrc ! nvoverlaysink  
+
 # sensor_id selects the camera: 0 or 1 on Jetson Nano B01
 $ gst-launch-1.0 nvarguscamerasrc sensor_id=0 ! nvoverlaysink
 
