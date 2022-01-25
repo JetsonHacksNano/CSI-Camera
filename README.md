@@ -21,48 +21,51 @@ $ gst-launch-1.0 nvarguscamerasrc sensor_id=0 ! nvoverlaysink
 # Example also shows sensor_mode parameter to nvarguscamerasrc
 # See table below for example video modes of example sensor
 $ gst-launch-1.0 nvarguscamerasrc sensor_id=0 ! \
-   'video/x-raw(memory:NVMM),width=3280, height=2464, framerate=21/1, format=NV12' ! \
-   nvvidconv flip-method=0 ! 'video/x-raw,width=960, height=720' ! \
+   'video/x-raw(memory:NVMM),width=1920, height=1080, framerate=30/1' ! \
+   nvvidconv flip-method=0 ! 'video/x-raw,width=960, height=540' ! \
    nvvidconv ! nvegltransform ! nveglglessink -e
 
 Note: The cameras appear to report differently than show below on some Jetsons. You can use the simple gst-launch example above to determine the camera modes that are reported by the sensor you are using. As an example the same camera from below may report differently on a Jetson Nano B01:
 
-GST_ARGUS: 3264 x 2464 FR = 21.000000 fps Duration = 47619048 ; Analog Gain range min 1.000000, max 10.625000; Exposure Range min 13000, max 683709000 
+GST_ARGUS: 1920 x 1080 FR = 29.999999 fps Duration = 33333334 ; Analog Gain range min 1.000000, max 10.625000; Exposure Range min 13000, max 683709000;
 
-You should adjust accordingly. As an example, for 3264x2464 @ 21 fps on sensor_id 1 of a Jetson Nano B01:
-$ gst-launch-1.0 nvarguscamerasrc sensor_id=1 ! \
-   'video/x-raw(memory:NVMM),width=3264, height=2464, framerate=21/1, format=NV12' ! \
-   nvvidconv flip-method=0 ! 'video/x-raw, width=816, height=616' ! \
-   nvvidconv ! nvegltransform ! nveglglessink -e
 
-Also, it's been noticed that the display transform is sensitive to width and height (in the above example, width=816, height=616). If you experience issues, check to see if your display width and height is the same ratio as the camera frame size selected (In the above example, 816x616 is 1/4 the size of 3264x2464).
+Also, it's been reported that the display transform is sensitive to width and height (in the above example, width=960, height=540). If you experience issues, check to see if your display width and height is the same ratio as the camera frame size selected (In the above example, 960x540 is 1/4 the size of 1920x1080).
 ```
 
 There are several examples:
 
-Note: You may need to install numpy for the Python examples to work, ie $ pip3 install numpy
 
+### simple_camera.py
 simple_camera.py is a Python script which reads from the camera and displays to a window on the screen using OpenCV:
-
+```
 $ python simple_camera.py
+```
+### face_detect.py
 
 face_detect.py is a python script which reads from the camera and uses  Haar Cascades to detect faces and eyes:
-
+```
 $ python face_detect.py
-
+```
 Haar Cascades is a machine learning based approach where a cascade function is trained from a lot of positive and negative images. The function is then used to detect objects in other images. 
 
 See: https://docs.opencv.org/3.3.1/d7/d8b/tutorial_py_face_detection.html 
 
+
 The third example is a simple C++ program which reads from the camera and displays to a window on the screen using OpenCV:
 
 ```
-$ g++ -std=c++11 -Wall -I/usr/lib/opencv simple_camera.cpp -L/usr/lib -lopencv_core -lopencv_highgui -lopencv_videoio -o simple_camera
+$ g++ -std=c++11 -Wall -I/usr/lib/opencv -I/usr/include/opencv4 simple_camera.cpp -L/usr/lib -lopencv_core -lopencv_highgui -lopencv_videoio -o simple_camera
 
 $ ./simple_camera
 ```
 
-The final example is dual_camera.py. This example is for the newer rev B01 of the Jetson Nano board, identifiable by two CSI-MIPI camera ports. This is a simple Python program which reads both CSI cameras and displays them in a window. The window is 960x1080. For performance, the script uses a separate thread for reading each camera image stream. To run the script:
+### dual_camera.py
+Note: You will need install numpy for the Dual Camera Python example to work, ie 
+```
+$ pip3 install numpy
+```
+The final example is dual_camera.py. This example is for the newer rev B01 of the Jetson Nano type boards (Jetson Nano, Jetson Xavier NX), identifiable by two CSI-MIPI camera ports. This is a simple Python program which reads both CSI cameras and displays them in a window. The window is 1080x540. For performance, the script uses a separate thread for reading each camera image stream. To run the script:
 
 ```
 $ python3 dual_camera.py
