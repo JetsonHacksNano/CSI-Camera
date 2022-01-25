@@ -1,33 +1,24 @@
 # MIT License
-# Copyright (c) 2019,2020 JetsonHacks
-# See license
-# A very simple code snippet
+# Copyright (c) 2019-2022 JetsonHacks
+
+# A simple code snippet
 # Using two  CSI cameras (such as the Raspberry Pi Version 2) connected to a
-# NVIDIA Jetson Nano Developer Kit (Rev B01) using OpenCV
+# NVIDIA Jetson Nano Developer Kit with two CSI ports (Jetson Nano, Jetson Xavier NX) via OpenCV
 # Drivers for the camera and OpenCV are included in the base image in JetPack 4.3+
 
 # This script will open a window and place the camera stream from each camera in a window
 # arranged horizontally.
 # The camera streams are each read in their own thread, as when done sequentially there
 # is a noticeable lag
-# For better performance, the next step would be to experiment with having the window display
-# in a separate thread
 
 import cv2
 import threading
 import numpy as np
 
-# gstreamer_pipeline returns a GStreamer pipeline for capturing from the CSI camera
-# Flip the image by setting the flip_method (most common values: 0 and 2)
-# display_width and display_height determine the size of each camera pane in the window on the screen
-
-left_camera = None
-right_camera = None
-
 
 class CSI_Camera:
 
-    def __init__ (self) :
+    def __init__(self):
         # Initialize instance variables
         # OpenCV video capture element
         self.video_capture = None
@@ -39,20 +30,19 @@ class CSI_Camera:
         self.read_lock = threading.Lock()
         self.running = False
 
-
     def open(self, gstreamer_pipeline_string):
         try:
             self.video_capture = cv2.VideoCapture(
                 gstreamer_pipeline_string, cv2.CAP_GSTREAMER
             )
-            
+            # Grab the first frame to start the video capturing
+            self.grabbed, self.frame = self.video_capture.read()
+
         except RuntimeError:
             self.video_capture = None
             print("Unable to open camera")
             print("Pipeline: " + gstreamer_pipeline_string)
-            return
-        # Grab the first frame to start the video capturing
-        self.grabbed, self.frame = self.video_capture.read()
+
 
     def start(self):
         if self.running:
@@ -60,14 +50,16 @@ class CSI_Camera:
             return None
         # create a thread to read the camera image
         if self.video_capture != None:
-            self.running=True
+            self.running = True
             self.read_thread = threading.Thread(target=self.updateCamera)
             self.read_thread.start()
         return self
 
     def stop(self):
-        self.running=False
+        self.running = False
+        # Kill the thread
         self.read_thread.join()
+        self.read_thread = None
 
     def updateCamera(self):
         # This is the thread to read images from the camera
@@ -75,18 +67,17 @@ class CSI_Camera:
             try:
                 grabbed, frame = self.video_capture.read()
                 with self.read_lock:
-                    self.grabbed=grabbed
-                    self.frame=frame
+                    self.grabbed = grabbed
+                    self.frame = frame
             except RuntimeError:
                 print("Could not read image from camera")
         # FIX ME - stop and cleanup thread
         # Something bad happened
-        
 
     def read(self):
         with self.read_lock:
             frame = self.frame.copy()
-            grabbed=self.grabbed
+            grabbed = self.grabbed
         return grabbed, frame
 
     def release(self):
@@ -98,30 +89,32 @@ class CSI_Camera:
             self.read_thread.join()
 
 
-# Currently there are setting frame rate on CSI Camera on Nano through gstreamer
-# Here we directly select sensor_mode 3 (1280x720, 59.9999 fps)
+""" 
+gstreamer_pipeline returns a GStreamer pipeline for capturing from the CSI camera
+Flip the image by setting the flip_method (most common values: 0 and 2)
+display_width and display_height determine the size of each camera pane in the window on the screen
+Default 1920x1080
+"""
+
+
 def gstreamer_pipeline(
     sensor_id=0,
-    sensor_mode=3,
-    capture_width=1280,
-    capture_height=720,
-    display_width=1280,
-    display_height=720,
+    capture_width=1920,
+    capture_height=1080,
+    display_width=1920,
+    display_height=1080,
     framerate=30,
     flip_method=0,
 ):
     return (
-        "nvarguscamerasrc sensor-id=%d sensor-mode=%d ! "
-        "video/x-raw(memory:NVMM), "
-        "width=(int)%d, height=(int)%d, "
-        "format=(string)NV12, framerate=(fraction)%d/1 ! "
+        "nvarguscamerasrc sensor-id=%d ! "
+        "video/x-raw(memory:NVMM), width=(int)%d, height=(int)%d, framerate=(fraction)%d/1 ! "
         "nvvidconv flip-method=%d ! "
         "video/x-raw, width=(int)%d, height=(int)%d, format=(string)BGRx ! "
         "videoconvert ! "
         "video/x-raw, format=(string)BGR ! appsink"
         % (
             sensor_id,
-            sensor_mode,
             capture_width,
             capture_height,
             framerate,
@@ -132,15 +125,17 @@ def gstreamer_pipeline(
     )
 
 
-def start_cameras():
+def run_cameras():
+    window_title = "Dual CSI Cameras"
     left_camera = CSI_Camera()
     left_camera.open(
         gstreamer_pipeline(
             sensor_id=0,
-            sensor_mode=3,
+            capture_width=1920,
+            capture_height=1080,
             flip_method=0,
-            display_height=540,
             display_width=960,
+            display_height=540,
         )
     )
     left_camera.start()
@@ -149,45 +144,53 @@ def start_cameras():
     right_camera.open(
         gstreamer_pipeline(
             sensor_id=1,
-            sensor_mode=3,
+            capture_width=1920,
+            capture_height=1080,
             flip_method=0,
-            display_height=540,
             display_width=960,
+            display_height=540,
         )
     )
     right_camera.start()
 
-    cv2.namedWindow("CSI Cameras", cv2.WINDOW_AUTOSIZE)
+    if left_camera.video_capture.isOpened() and right_camera.video_capture.isOpened():
 
-    if (
-        not left_camera.video_capture.isOpened()
-        or not right_camera.video_capture.isOpened()
-    ):
-        # Cameras did not open, or no camera attached
+        cv2.namedWindow(window_title, cv2.WINDOW_AUTOSIZE)
 
-        print("Unable to open any cameras")
-        # TODO: Proper Cleanup
-        SystemExit(0)
+        try:
+            while True:
+                _, left_image = left_camera.read()
+                _, right_image = right_camera.read()
+                # Use numpy to place images next to each other
+                camera_images = np.hstack((left_image, right_image)) 
+                # Check to see if the user closed the window
+                # Under GTK+ (Jetson Default), WND_PROP_VISIBLE does not work correctly. Under Qt it does
+                # GTK - Substitute WND_PROP_AUTOSIZE to detect if window has been closed by user
+                if cv2.getWindowProperty(window_title, cv2.WND_PROP_AUTOSIZE) >= 0:
+                    cv2.imshow(window_title, camera_images)
+                else:
+                    break
 
-    while cv2.getWindowProperty("CSI Cameras", 0) >= 0 :
-        
-        _ , left_image=left_camera.read()
-        _ , right_image=right_camera.read()
-        camera_images = np.hstack((left_image, right_image))
-        cv2.imshow("CSI Cameras", camera_images)
+                # This also acts as
+                keyCode = cv2.waitKey(30) & 0xFF
+                # Stop the program on the ESC key
+                if keyCode == 27:
+                    break
+        finally:
 
-        # This also acts as
-        keyCode = cv2.waitKey(30) & 0xFF
-        # Stop the program on the ESC key
-        if keyCode == 27:
-            break
+            left_camera.stop()
+            left_camera.release()
+            right_camera.stop()
+            right_camera.release()
+        cv2.destroyAllWindows()
+    else:
+        print("Error: Unable to open both cameras")
+        left_camera.stop()
+        left_camera.release()
+        right_camera.stop()
+        right_camera.release()
 
-    left_camera.stop()
-    left_camera.release()
-    right_camera.stop()
-    right_camera.release()
-    cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
-    start_cameras()
+    run_cameras()
