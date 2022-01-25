@@ -1,9 +1,9 @@
 # CSI-Camera
-Simple example of using a MIPI-CSI(2) Camera (like the Raspberry Pi Version 2 camera) with the NVIDIA Jetson Nano Developer Kit. This is support code for the article on JetsonHacks: https://wp.me/p7ZgI9-19v
+Simple example of using a MIPI-CSI(2) Camera (like the Raspberry Pi Version 2 camera) with the NVIDIA Jetson Developer Kits with CSI camera ports. This includes the recent Jetson Nano and Jetson Xavier NX.  This is support code for the article on JetsonHacks: https://wp.me/p7ZgI9-19v
 
-The camera should be installed in the MIPI-CSI Camera Connector on the carrier board. The pins on the camera ribbon should face the Jetson Nano module, the stripe faces outward.
+For the Nanos and Xavier NX, the camera should be installed in the MIPI-CSI Camera Connector on the carrier board. The pins on the camera ribbon should face the Jetson module, the tape stripe faces outward.
 
-The new Jetson Nano B01 developer kit has two CSI camera slots. You can use the sensor_mode attribute with nvarguscamerasrc to specify the camera. Valid values are 0 or 1 (the default is 0 if not specified), i.e.
+Some Jetson developer kits have two CSI camera slots. You can use the sensor_mode attribute with the GStreamer nvarguscamerasrc element to specify which camera. Valid values are 0 or 1 (the default is 0 if not specified), i.e.
 
 ```
 nvarguscamerasrc sensor_id=0
@@ -24,20 +24,21 @@ $ gst-launch-1.0 nvarguscamerasrc sensor_id=0 ! \
    'video/x-raw(memory:NVMM),width=1920, height=1080, framerate=30/1' ! \
    nvvidconv flip-method=0 ! 'video/x-raw,width=960, height=540' ! \
    nvvidconv ! nvegltransform ! nveglglessink -e
-
-Note: The cameras appear to report differently than show below on some Jetsons. You can use the simple gst-launch example above to determine the camera modes that are reported by the sensor you are using. As an example the same camera from below may report differently on a Jetson Nano B01:
-
-GST_ARGUS: 1920 x 1080 FR = 29.999999 fps Duration = 33333334 ; Analog Gain range min 1.000000, max 10.625000; Exposure Range min 13000, max 683709000;
-
-
-Also, it's been reported that the display transform is sensitive to width and height (in the above example, width=960, height=540). If you experience issues, check to see if your display width and height is the same ratio as the camera frame size selected (In the above example, 960x540 is 1/4 the size of 1920x1080).
 ```
 
-There are several examples:
+Note: The cameras may report differently than show below. You can use the simple gst-launch example above to determine the camera modes that are reported by the sensor you are using. 
+```
+GST_ARGUS: 1920 x 1080 FR = 29.999999 fps Duration = 33333334 ; Analog Gain range min 1.000000, max 10.625000; Exposure Range min 13000, max 683709000;
+```
+
+Also, the display transform may be sensitive to width and height (in the above example, width=960, height=540). If you experience issues, check to see if your display width and height is the same ratio as the camera frame size selected (In the above example, 960x540 is 1/4 the size of 1920x1080).
+
+
+## Samples
 
 
 ### simple_camera.py
-simple_camera.py is a Python script which reads from the camera and displays to a window on the screen using OpenCV:
+simple_camera.py is a Python script which reads from the camera and displays the frame to a window on the screen using OpenCV:
 ```
 $ python simple_camera.py
 ```
@@ -52,35 +53,35 @@ Haar Cascades is a machine learning based approach where a cascade function is t
 See: https://docs.opencv.org/3.3.1/d7/d8b/tutorial_py_face_detection.html 
 
 
-The third example is a simple C++ program which reads from the camera and displays to a window on the screen using OpenCV:
+### dual_camera.py
+Note: You will need install numpy for the Dual Camera Python example to work:
+```
+$ pip3 install numpy
+```
+This example is for the newer Jetson boards (Jetson Nano, Jetson Xavier NX) with two CSI-MIPI camera ports. This is a simple Python program which reads both CSI cameras and displays them in one window. The window is 1920x540. For performance, the script uses a separate thread for reading each camera image stream. To run the script:
+
+```
+$ python3 dual_camera.py
+```
+
+### simple_camera.cpp
+The last example is a simple C++ program which reads from the camera and displays to a window on the screen using OpenCV:
 
 ```
 $ g++ -std=c++11 -Wall -I/usr/lib/opencv -I/usr/include/opencv4 simple_camera.cpp -L/usr/lib -lopencv_core -lopencv_highgui -lopencv_videoio -o simple_camera
 
 $ ./simple_camera
 ```
-
-### dual_camera.py
-Note: You will need install numpy for the Dual Camera Python example to work, ie 
-```
-$ pip3 install numpy
-```
-The final example is dual_camera.py. This example is for the newer rev B01 of the Jetson Nano type boards (Jetson Nano, Jetson Xavier NX), identifiable by two CSI-MIPI camera ports. This is a simple Python program which reads both CSI cameras and displays them in a window. The window is 1080x540. For performance, the script uses a separate thread for reading each camera image stream. To run the script:
-
-```
-$ python3 dual_camera.py
-```
-
-The directory 'instrumented' contains instrumented code which can help adjust performance and frame rates.
+This program is a simple outline, and does not handle needed error checking well. For better C++ code, use https://github.com/dusty-nv/jetson-utils
 
 <h2>Notes</h2>
 
 <h3>Camera Image Formats</h3>
 You can use v4l2-ctl to determine the camera capabilities. v4l2-ctl is in the v4l-utils:
-
+```
 $ sudo apt-get install v4l-utils
-
-For the Raspberry Pi V2 camera, typically the output is (assuming the camera is /dev/video0):
+```
+For the Raspberry Pi V2 camera, a typical output is (assuming the camera is /dev/video0):
 
 ```
 $ v4l2-ctl --list-formats-ext
@@ -132,6 +133,21 @@ If you can open the camera in GStreamer from the command line, and have issues o
 ```
 
 <h2>Release Notes</h2>
+
+v3.2 Release January, 2022
+* Add Exception handling to Python code
+* Faster GStreamer pipelines, better performance
+* Better naming of variables, simplification
+* Remove Instrumented examples
+* L4T 32.6.1 (JetPack 4.5)
+* OpenCV 4.4.1
+* Python3
+* Tested on Jetson Nano B01, Jetson Xavier NX
+* Tested with Raspberry Pi V2 cameras
+
+
+v3.11 Release April, 2020
+* Release both cameras in dual camera example (bug-fix)
 
 v3.1 Release March, 2020
 * L4T 32.3.1 (JetPack 4.3)
